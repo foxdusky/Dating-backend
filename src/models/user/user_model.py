@@ -45,12 +45,28 @@ def _check_login_unique(session: Session, login: str) -> None:
         )
 
 
+def _check_e_mail_unique(session: Session, e_mail: str) -> None:
+    user = user_repository.get_user_by_login(session, e_mail)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"E-mail: {e_mail} is not unique",
+        )
+
+
 def get_all_users(session: Session) -> list[User]:
     return user_repository.get_all_users(session)
 
 
 def create_user(session: Session, user: User) -> User:
+    """
+    Function for create user sample in database
+    also checks if users login unique and email
+    returns 400 Bad Request if login or e_mail isn't unique with detail string
+    """
     _check_login_unique(session, user.username)
+    _check_e_mail_unique(session, user.e_mail)
+
     user.password = _get_password_hash(user.password)
     return user_repository.create_user(session, user)
 

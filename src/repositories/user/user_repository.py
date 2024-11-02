@@ -21,6 +21,12 @@ def get_user_by_login(session: Session, login: str) -> User | None:
     return session.exec(st).first()
 
 
+def get_user_by_e_mail(session: Session, e_mail: str) -> User | None:
+    st = select(User)
+    st = st.where(User.e_mail == e_mail)
+    return session.exec(st).first()
+
+
 def create_user(session: Session, user: User):
     session.add(user)
     session.commit()
