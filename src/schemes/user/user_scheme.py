@@ -19,3 +19,9 @@ class User(UserBase, table=True):
     __tablename__ = "user"
     gender: "Gender" = Relationship(back_populates='users')
     photo: "File" = Relationship(back_populates="user_photo")
+
+
+from schemes.user.gender_scheme import Gender
+from schemes.file.file_scheme import File
+
+User.model_rebuild()

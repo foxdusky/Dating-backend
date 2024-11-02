@@ -6,8 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from configs.env import PICTURES_DIR, IS_DEV_ENV
-from controllers.chat.chat_controller import chat_router
-from controllers.message.message_controller import message_router
 from controllers.user.auth_controller import auth_router
 from controllers.user.user_controller import user_router
 from ws import ws_manager
@@ -37,22 +35,10 @@ app.include_router(auth_router)
 
 app.include_router(user_router)
 app.include_router(chat_router)
-app.include_router(message_router)
 
 
 # ############################### #
 
-
-# logger.remove()
-# logger.add("file_{time}.log", rotation="1 day", retention="10 days", level="DEBUG", format="{time} {level} {message}")
-#
-#
-# @app.middleware("http")
-# async def log_requests(request: Request, call_next):
-#     logger.info(f"Incoming request: {request.method} {request.url}")
-#     response = await call_next(request)
-#     logger.info(f"Response status: {response.status_code}")
-#     return response
 
 @app.get("/healthcheck")
 def health_check():
