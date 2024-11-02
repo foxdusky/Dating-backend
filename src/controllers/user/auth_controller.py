@@ -20,15 +20,3 @@ async def sign_in(
 ):
     token = auth_model.sign_in(session, form_data.username, form_data.password)
     return token
-
-
-@auth_router.post("/registration/", response_model=AuthToken)
-def reg(
-    user: User,
-    session: Session = Depends(get_session),
-
-):
-    password = user.password
-    user_model.create_user(session, user)
-    token = auth_model.sign_in(session, user.username, password)
-    return token
