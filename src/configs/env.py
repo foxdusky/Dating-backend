@@ -11,3 +11,7 @@ DB_CON_STR = os.getenv('DB_CON_STR')
 PICTURES_DIR = os.getenv("PICTURES_DIR")
 
 IS_DEV_ENV = int(os.getenv('IS_DEV_ENV'))
+
+REDIS_HOST = os.getenv('REDIS_HOST')
+
+REDIS_PORT = os.getenv('REDIS_PORT')

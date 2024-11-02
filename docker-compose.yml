@@ -7,6 +7,7 @@ services:
       dockerfile: ./Dockerfile
     depends_on:
       - db
+      - redis-server
     command: bash -c "
       cd /app/src
       && alembic upgrade head
@@ -37,6 +38,11 @@ services:
       - dbeaver:/opt/cloudbeaver/workspace
     ports:
       - "8978:8978"
+
+  redis-server:
+    image: redis/redis-stack-server
+    restart: always
+    command: redis-server --protected-mode no
 
 
 volumes:
