@@ -15,6 +15,8 @@ class UserBase(SQLModel):
     profile_photo: int | None = Field(foreign_key='file.id', default=None)
     gender_id: int | None = Field(nullable=False, foreign_key='gender.id')
     reg_at: datetime | None = Field(default_factory=datetime.utcnow)
+    longitude: float | None = Field()
+    width: float | None = Field()
 
 
 class User(UserBase, table=True):
@@ -35,6 +37,7 @@ class UserSearchFilter(SQLModel):
 
 class UserListRequestBody(GetALLRequestBody):
     search_filter: UserSearchFilter | None = None
+    distance_filter: float | None = None
 
 
 class UserInfo(SQLModel):

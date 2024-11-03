@@ -10,8 +10,8 @@ from configs.env import PICTURES_DIR, IS_DEV_ENV
 from controllers.user.auth_controller import auth_router
 from controllers.user.user_controller import user_router
 from db import get_session
+from models.user import user_model
 from models.user.auth_model import get_current_user
-from repositories.user import user_repository
 from schemes.user.user_scheme import User, UserResponseAll, UserListRequestBody
 from ws import ws_manager
 
@@ -59,7 +59,7 @@ def get_list_of_clients(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    return user_repository.get_all_users(session, body)
+    return user_model.get_all_users(session, body, current_user)
 
 
 @app.websocket("/")

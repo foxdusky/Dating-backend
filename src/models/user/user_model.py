@@ -6,8 +6,9 @@ from models.user.auth_model import _get_password_hash
 from repositories.matching import matching_repository
 from repositories.user import user_repository
 from schemes.matching.matching_scheme import Matching
-from schemes.user.user_scheme import User
+from schemes.user.user_scheme import User, UserListRequestBody, UserInfo, UserResponseAll
 from services.mailing import matching_mailing
+from geopy.distance import great_circle
 
 
 def _check_operation_available(current_user: User, user_on_action: User) -> None:
@@ -109,6 +110,28 @@ def matching(session, current_user: User, matching_user_id: int, background_task
         )
         matching_repository.create_matching(session, match_obj)
         return "Not liked you yet, we will notify you if the user reciprocates"
+
+
+def get_all_users(session: Session, body: UserListRequestBody, current_user: User):
+    total_count, result = user_repository.get_all_users(session, body, current_user.id)
+    if body.distance_filter:
+        _result: list[UserInfo] = []
+        if current_user.width and current_user.longitude:
+            current_cords = (current_user.width, current_user.longitude)
+            for user in result:
+                if user.width and user.longitude:
+                    user_cords = (user.width, user.longitude)
+                    distance = great_circle(current_cords, user_cords).kilometers
+                    if distance <= body.distance_filter:
+                        _result.append(user)
+        return UserResponseAll(
+            count=len(_result),
+            result=_result
+        )
+    return UserResponseAll(
+        count=total_count,
+        result=result
+    )
 
 
 def create_user(session: Session, user: User) -> User:

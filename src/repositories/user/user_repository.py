@@ -8,10 +8,12 @@ from schemes.user.user_scheme import User, UserListRequestBody, UserResponseAll
 def get_all_users(
     session: Session,
     body: UserListRequestBody,
-) -> UserResponseAll:
+    current_user_id: int,
+) -> (int, list[User]):
     st = select(User).options(
         joinedload(User.gender), joinedload(User.photo),
     )
+    st = st.where(User.id != current_user_id)
 
     # Фильтрация по параметрам из search_filter
     if body.search_filter:
@@ -44,19 +46,16 @@ def get_all_users(
     total_count = session.exec(count_query).one()
 
     # Лимит и офсет для пагинации
-    if body.limit:
-        st = st.limit(body.limit)
-    if body.offset:
-        st = st.offset(body.offset)
+    if not body.distance_filter:
+        if body.limit:
+            st = st.limit(body.limit)
+        if body.offset:
+            st = st.offset(body.offset)
 
     # Выполнение основного запроса и возврат результата
     result = session.exec(st).unique().all()
 
-    # return {"count": total_count, "result": list(result)}
-    return UserResponseAll(
-        count=total_count,
-        result=list(result),
-    )
+    return total_count, list(result)
 
 
 def get_user_by_id(session: Session, user_id: int) -> User | None:
