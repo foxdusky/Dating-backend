@@ -11,10 +11,10 @@ from controllers.user.user_controller import user_router
 from ws import ws_manager
 
 app = FastAPI(
-    title="RedBread Chat API",
-    description="API RedBread Chat",
+    title="Dating API",
+    description="API Dating",
     version="0.0.1",
-    docs_url="/docs",
+    pics_url="/pics",
 )
 
 app.add_middleware(
@@ -34,7 +34,6 @@ app.include_router(auth_router)
 # ############################### #
 
 app.include_router(user_router)
-app.include_router(chat_router)
 
 
 # ############################### #
