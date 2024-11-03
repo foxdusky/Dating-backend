@@ -19,7 +19,7 @@ app = FastAPI(
     title="Dating API",
     description="API Dating",
     version="0.1.1",
-    pics_url="/pics",
+    docs_url="/docs",
 )
 
 app.add_middleware(
