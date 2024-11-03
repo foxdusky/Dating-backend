@@ -1,5 +1,8 @@
 from datetime import datetime
+from typing import Annotated
 
+from fastapi import Form
+from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
 
 from schemes.constant.request_body import GetALLRequestBody
@@ -25,6 +28,32 @@ class User(UserBase, table=True):
     photo: "File" = Relationship(back_populates="user_photo")
 
 
+class UserRegistration(BaseModel):
+    username: str = Field(description="Require a unique name of user, also it's checking for unique")
+    password: str
+    e_mail: str = Field(description="Require a user email, also it's checking for unique")
+    name: str | None = None
+    surname: str | None = None
+    gender_id: int = Field(description="Users gender in int 1 is male, 2 is female")
+    width: float | None = None
+    longitude: float | None = None
+
+    class Config:
+        title = "User Registration Body"
+        schema_extra = {
+            "example": {
+                "username": "example_user",
+                "password": "example_password",
+                "e_mail": "user@example.com",
+                "name": "John",
+                "surname": "Doe",
+                "gender_id": 1,
+                "width": 180.5,
+                "longitude": -75.0
+            }
+        }
+
+
 class UserSearchFilter(SQLModel):
     id: int | None = None
     username: str | None = None
@@ -36,8 +65,12 @@ class UserSearchFilter(SQLModel):
 
 
 class UserListRequestBody(GetALLRequestBody):
-    search_filter: UserSearchFilter | None = None
-    distance_filter: float | None = None
+    search_filter: UserSearchFilter | None = Field(
+        description="Search filter by columns, insert any value in params to get filtered result"
+    )
+    distance_filter: float | None = Field(
+        description="Distance filter, require float value in kilometers"
+    )
 
 
 class UserInfo(SQLModel):

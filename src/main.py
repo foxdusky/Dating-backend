@@ -18,7 +18,7 @@ from ws import ws_manager
 app = FastAPI(
     title="Dating API",
     description="API Dating",
-    version="0.0.1",
+    version="0.1.1",
     pics_url="/pics",
 )
 
@@ -30,7 +30,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# TEST Sector
 app.mount("/static", StaticFiles(directory=PICTURES_DIR), name="static")
 
 # Auth sector
@@ -42,11 +41,6 @@ app.include_router(user_router)
 
 
 # ############################### #
-
-
-@app.get("/healthcheck")
-def health_check():
-    return {"status": "ok"}
 
 
 @app.post(

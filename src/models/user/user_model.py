@@ -77,7 +77,7 @@ def _limit_day_requests(session: Session, user_id: int):
 
 def matching(session, current_user: User, matching_user_id: int, background_tasks: BackgroundTasks):
     """
-    Function that consist all of the matching logix and sending
+    Function that consist all the matching logix and sending
     """
     # Check for limit of daily requests
     _limit_day_requests(session, current_user.id)
@@ -93,9 +93,15 @@ def matching(session, current_user: User, matching_user_id: int, background_task
     # check for sympathy is mutual
     if matching_record:
         if current_user.id == matching_record.user_id:
-            return "Don't spam, you already liked that user"
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Don't spam, you already liked that user",
+            )
         if matching_record.is_mutual:
-            return "You already liked that user, or he liked u backwards"
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You already liked that user, or he liked u backwards",
+            )
         matching_repository.set_matching_to_mutual(session, matching_record)
         users: list[User] = []
         for user_id in ids:
@@ -104,14 +110,20 @@ def matching(session, current_user: User, matching_user_id: int, background_task
         # Sending email messages
         background_tasks.add_task(matching_mailing, users)
 
-        return "Congrats your sympathy is mutual check the mail"
+        return HTTPException(
+            status_code=status.HTTP_200_OK,
+            detail="Congrats your sympathy is mutual check the mail",
+        )
     else:
         match_obj = Matching(
             user_id=current_user.id,
             liked_user_id=matching_user_id,
         )
         matching_repository.create_matching(session, match_obj)
-        return "Not liked you yet, we will notify you if the user reciprocates"
+        return HTTPException(
+            status_code=status.HTTP_200_OK,
+            detail="Not liked you yet, we will notify you if the user reciprocates",
+        )
 
 
 def get_all_users(session: Session, body: UserListRequestBody, current_user: User):
