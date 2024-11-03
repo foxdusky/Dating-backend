@@ -10,6 +10,8 @@ from schemes.user.user_scheme import User, UserListRequestBody, UserInfo, UserRe
 from services.mailing import matching_mailing
 from geopy.distance import great_circle
 
+import re
+
 
 def _check_operation_available(current_user: User, user_on_action: User) -> None:
     """
@@ -134,12 +136,23 @@ def get_all_users(session: Session, body: UserListRequestBody, current_user: Use
     )
 
 
+def _is_valid_email_format(email: str):
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    res = bool(re.match(pattern, email))
+    if not res:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Wrong email",
+        )
+
+
 def create_user(session: Session, user: User) -> User:
     """
     Function for create user sample in database
     also checks if users login unique and email
     returns 400 Bad Request if login or e_mail isn't unique with detail string
     """
+    _is_valid_email_format(email=user.e_mail)
     _check_login_unique(session, user.username)
     _check_e_mail_unique(session, user.e_mail)
 
