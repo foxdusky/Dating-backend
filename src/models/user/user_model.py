@@ -54,8 +54,7 @@ def _check_e_mail_unique(session: Session, e_mail: str) -> None:
         )
 
 
-def get_all_users(session: Session) -> list[User]:
-    return user_repository.get_all_users(session)
+
 
 
 def create_user(session: Session, user: User) -> User:

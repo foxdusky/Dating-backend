@@ -1,13 +1,18 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi import WebSocket
 from fastapi import WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlmodel import Session
 
 from configs.env import PICTURES_DIR, IS_DEV_ENV
 from controllers.user.auth_controller import auth_router
 from controllers.user.user_controller import user_router
+from db import get_session
+from models.user.auth_model import get_current_user
+from repositories.user import user_repository
+from schemes.user.user_scheme import User, UserResponseAll, UserListRequestBody
 from ws import ws_manager
 
 app = FastAPI(
@@ -42,6 +47,19 @@ app.include_router(user_router)
 @app.get("/healthcheck")
 def health_check():
     return {"status": "ok"}
+
+
+@app.post(
+    "/list",
+    response_model=UserResponseAll,
+    description="Function for getting list of users with sort and filters"
+)
+def get_list_of_clients(
+    body: UserListRequestBody,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    return user_repository.get_all_users(session, body)
 
 
 @app.websocket("/")
