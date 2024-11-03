@@ -1,9 +1,15 @@
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
+from configs.env import RESEND_API_KEY
 from models.user.auth_model import _get_password_hash
+from repositories.matching import matching_repository
 from repositories.user import user_repository
+from schemes.matching.matching_scheme import Matching
 from schemes.user.user_scheme import User
+import resend
+
+resend.api_key = RESEND_API_KEY
 
 
 def _check_operation_available(current_user: User, user_on_action: User) -> None:
@@ -54,7 +60,39 @@ def _check_e_mail_unique(session: Session, e_mail: str) -> None:
         )
 
 
-
+def matching(session, current_user: User, matching_user_id: int):
+    ids = [current_user.id, matching_user_id]
+    matching_record = matching_repository.get_match_by_ids(
+        session=session,
+        ids=ids
+    )
+    # check for sympathy is mutual
+    if matching_record:
+        if current_user.id == matching_record.user_id:
+            return "Don't spam, you already liked that user"
+        if matching_record.is_mutual:
+            return "You already liked that user, or he liked u backwards"
+        matching_repository.set_matching_to_mutual(session, matching_record)
+        users: list[User] = []
+        for user_id in ids:
+            users.append(user_repository.get_user_by_id(session, user_id))
+        # Sending email messages
+        for i in range(len(users)):
+            recipient_index = (i + 1) % len(users)  # Получаем индекс следующего пользователя
+            r = resend.Emails.send({
+                "from": "dating@redbread.tech",
+                "to": f"{users[i].e_mail}",
+                "subject": "Somebody liked your profile",
+                "html": f"{users[recipient_index].name} liked you. Participant's email address: {users[recipient_index].e_mail}"
+            })
+        return "Congrats your sympathy is mutual check the mail"
+    else:
+        match_obj = Matching(
+            user_id=current_user.id,
+            liked_user_id=matching_user_id,
+        )
+        matching_repository.create_matching(session, match_obj)
+        return "Not liked you yet, we will notify you if the user reciprocates"
 
 
 def create_user(session: Session, user: User) -> User:

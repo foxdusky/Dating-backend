@@ -15,3 +15,5 @@ IS_DEV_ENV = int(os.getenv('IS_DEV_ENV'))
 REDIS_HOST = os.getenv('REDIS_HOST')
 
 REDIS_PORT = os.getenv('REDIS_PORT')
+
+RESEND_API_KEY = os.getenv('RESEND_API_KEY')

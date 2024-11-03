@@ -28,6 +28,7 @@ if config.config_file_name is not None:
 from schemes.user.user_scheme import User
 from schemes.file.file_scheme import File
 from schemes.user.gender_scheme import Gender
+from schemes.matching.matching_scheme import Matching
 
 # -------------------------- #
 
