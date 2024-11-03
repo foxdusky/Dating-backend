@@ -1,7 +1,15 @@
 from sqlmodel import Session, select
 
 from schemes.matching.matching_scheme import Matching
-from schemes.user.user_scheme import User
+from datetime import date, timedelta
+
+
+def get_today_user_matching_by_id(session: Session, user_id: int):
+    today = date.today()
+    st = select(Matching).where(Matching.user_id == user_id)
+    st = st.where(Matching.created_at >= today)
+    st = st.where(Matching.created_at < today + timedelta(days=1))
+    return session.exec(st).all()
 
 
 def get_match_by_ids(session: Session, ids: list[int]) -> Matching | None:
@@ -31,7 +39,7 @@ def update_matching(session: Session, matching: Matching):
     return db_matching
 
 
-def delete_user(session: Session, user: User):
-    session.delete(user)
+def delete_matching(session: Session, matching: Matching):
+    session.delete(matching)
     session.commit()
-    return user
+    return matching

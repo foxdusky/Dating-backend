@@ -1,18 +1,19 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from sqlmodel import Session
 
-from configs.env import RESEND_API_KEY
+from configs.env import MATCHING_REQUEST_DAILY_LIMITATION
 from models.user.auth_model import _get_password_hash
 from repositories.matching import matching_repository
 from repositories.user import user_repository
 from schemes.matching.matching_scheme import Matching
 from schemes.user.user_scheme import User
-import resend
-
-resend.api_key = RESEND_API_KEY
+from services.mailing import matching_mailing
 
 
 def _check_operation_available(current_user: User, user_on_action: User) -> None:
+    """
+    A function that checks that the user is trying to change their data
+    """
     if current_user.id != user_on_action:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -21,6 +22,9 @@ def _check_operation_available(current_user: User, user_on_action: User) -> None
 
 
 def get_user_by_id(session: Session, user_id: int) -> User:
+    """
+    Function for getting user by his db id
+    """
     user = user_repository.get_user_by_id(session, user_id)
 
     if not user:
@@ -32,17 +36,10 @@ def get_user_by_id(session: Session, user_id: int) -> User:
     return user
 
 
-def get_by_login(session: Session, login: str) -> User:
-    user = user_repository.get_user_by_login(session, login)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with login {login} not found",
-        )
-    return user
-
-
 def _check_login_unique(session: Session, login: str) -> None:
+    """
+    Function that checks is login unique
+    """
     user = user_repository.get_user_by_login(session, login)
     if user:
         raise HTTPException(
@@ -52,6 +49,9 @@ def _check_login_unique(session: Session, login: str) -> None:
 
 
 def _check_e_mail_unique(session: Session, e_mail: str) -> None:
+    """
+    Function that checks is e mail unique
+    """
     user = user_repository.get_user_by_login(session, e_mail)
     if user:
         raise HTTPException(
@@ -60,8 +60,29 @@ def _check_e_mail_unique(session: Session, e_mail: str) -> None:
         )
 
 
-def matching(session, current_user: User, matching_user_id: int):
+def _limit_day_requests(session: Session, user_id: int):
+    """
+    Function that checks is user out of daily limit for matching
+    """
+    res = matching_repository.get_today_user_matching_by_id(session, user_id)
+    if len(res) >= MATCHING_REQUEST_DAILY_LIMITATION:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many requests for today get relax, and return here tomorrow",
+        )
+
+
+def matching(session, current_user: User, matching_user_id: int, background_tasks: BackgroundTasks):
+    """
+    Function that consist all of the matching logix and sending
+    """
+    # Check for limit of daily requests
+    _limit_day_requests(session, current_user.id)
+    # Check for user existence
+    get_user_by_id(session, matching_user_id)
+    # Generating list with users ids
     ids = [current_user.id, matching_user_id]
+    # Getting matching record if exists
     matching_record = matching_repository.get_match_by_ids(
         session=session,
         ids=ids
@@ -76,15 +97,10 @@ def matching(session, current_user: User, matching_user_id: int):
         users: list[User] = []
         for user_id in ids:
             users.append(user_repository.get_user_by_id(session, user_id))
+
         # Sending email messages
-        for i in range(len(users)):
-            recipient_index = (i + 1) % len(users)  # Получаем индекс следующего пользователя
-            r = resend.Emails.send({
-                "from": "dating@redbread.tech",
-                "to": f"{users[i].e_mail}",
-                "subject": "Somebody liked your profile",
-                "html": f"{users[recipient_index].name} liked you. Participant's email address: {users[recipient_index].e_mail}"
-            })
+        background_tasks.add_task(matching_mailing, users)
+
         return "Congrats your sympathy is mutual check the mail"
     else:
         match_obj = Matching(

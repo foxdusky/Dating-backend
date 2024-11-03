@@ -58,10 +58,11 @@ async def get_user_by_id(
 @user_router.post("/{id}/match", response_model=str, description="Func for like user by his id")
 async def matching(
     id: int,
+    background_tasks: BackgroundTasks,
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    return user_model.matching(session, current_user, id)
+    return user_model.matching(session, current_user, id, background_tasks)
 
 
 @user_router.put("/", response_model=User, description="Function for update profile by user him own self")
