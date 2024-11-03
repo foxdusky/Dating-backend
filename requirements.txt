@@ -11,3 +11,4 @@ bcrypt
 pydantic~=2.5.3
 SQLAlchemy~=2.0.29
 psycopg2-binary
+pillow

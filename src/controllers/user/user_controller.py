@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, BackgroundTasks, File
 from sqlmodel import Session
 
 from constant.ws_queues import WSQueue
 from db import get_session
 from middleware.ws_queue_decorator import ws_queue
+from models.file.file_model import create_file
 from models.user import user_model
-from models.user.auth_model import sign_in
 from models.user.auth_model import get_current_user
+from models.user.auth_model import sign_in
 from schemes.user.auth_scheme import AuthToken
 from schemes.user.user_scheme import User
 
@@ -24,12 +25,16 @@ user_router = APIRouter(
     description="Function for creating user exemplar in database by user him own self"
 )
 def registration(
-    user: User,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(),
+    file: UploadFile = File(...),
     session: Session = Depends(get_session),
 ):
     password = user.password
-    user_model.create_user(session, user)
+    _user = user_model.create_user(session, user)
     token = sign_in(session, user.username, password)
+    file = file.file.read()
+    background_tasks.add_task(create_file, session, _user, file)
     return token
 
 
@@ -39,6 +44,15 @@ async def get_current_user(
     current_user: User = Depends(get_current_user),
 ):
     return user_model.get_user_by_id(session, current_user.id)
+
+
+@user_router.get("/{client_id}", response_model=User, description="Func for getting info about client by his id")
+async def get_current_user(
+    client_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    return user_model.get_user_by_id(session, client_id)
 
 
 @user_router.put("/", response_model=User, description="Function for update profile by user him own self")
