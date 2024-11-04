@@ -81,3 +81,20 @@ run using docker
 ~~~
 docker-compose up -d --build
 ~~~
+
+
+After you have successfully launched the docker container, upload a watermark image to volume
+~~~
+YOUR_COMPOSE_PROJECT_NAME/pics 
+~~~
+Which will be superimposed on subsequent uploaded user autographs, this file should be called 
+~~~
+watermark.png 
+~~~
+Well, or change its name, before changing the value of the variable in the file 
+~~~
+models/file/file_model.py 
+~~~
+~~~
+watermark_image_path
+~~~
