@@ -1,16 +1,16 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from sqlmodel import SQLModel, Field
 
 
 class GetALLRequestBody(SQLModel):
-    limit: int | None = Field(
+    limit: Optional[int] = Field(
         description="Limit of returning exemplars"
     )
-    offset: int | None = Field(
+    offset: Optional[int] = Field(
         description="Offset of returning exemplars"
     )
-    sort_field: str | None = Field(
+    sort_field: Optional[int] = Field(
         description="Field name for sorting, like an name of parameters in search filter"
     )
     sort_direction: Literal['asc', 'desc'] | None = None
