@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Form
 from pydantic import BaseModel
@@ -65,11 +65,15 @@ class UserSearchFilter(SQLModel):
 
 
 class UserListRequestBody(GetALLRequestBody):
-    search_filter: Optional[UserSearchFilter] = Field(
-        description="Search filter by columns, insert any value in params to get filtered result"
+    search_filter: UserSearchFilter | None = Field(
+        description="Search filter by columns, insert any value in params to get filtered result",
+        nullable=True,
+        default=None
     )
-    distance_filter: Optional[float] = Field(
-        description="Distance filter, require float value in kilometers"
+    distance_filter: float | None = Field(
+        description="Distance filter, require float value in kilometers",
+        nullable=True,
+        default=None
     )
 
 
