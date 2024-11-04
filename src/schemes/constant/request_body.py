@@ -14,7 +14,7 @@ class GetALLRequestBody(SQLModel):
         nullable=True,
         default=None
     )
-    sort_field: int | None = Field(
+    sort_field: str | None = Field(
         description="Field name for sorting, like an name of parameters in search filter",
         nullable=True,
         default=None
